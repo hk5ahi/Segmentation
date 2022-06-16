@@ -1,0 +1,51 @@
+import numpy as np
+import cv2 as cv
+
+img = cv.imread(r'C:\Users\Dell\Downloads\For Project\Segmentation\Training Data\images\CHNCXR_0002_0.png', 0)  # Read input image
+output1 = np.copy(img)  # image for mean thresholding/segmentation
+output2 = np.copy(img)  # image for binary segmentation
+dims = np.shape(img)  # image dimensions
+rows = dims[0]  # rows of image
+cols = dims[1]  # cols of image
+M1 = np.min(img) + 10  # Initial Mean for Cluster 1
+M2 = np.max(img) - 20  # Initial Mean for Cluster 2
+
+Cluster1 = []  # Cluster 1 defined
+Cluster2 = []  # Cluster 2 defined
+
+while (1):
+    for i in range(0, rows):
+        for j in range(0, cols):
+            diff1 = abs(img[i, j] - M1)  # difference of pixel value and Mean 1
+            diff2 = abs(img[i, j] - M2)  # difference of pixel value and Mean 2
+            decide = min(diff1, diff2)  # Comparative minimum difference
+            if decide == diff1:  # Closer to Mean 1
+                Cluster1.append(img[i, j])  # Add to Cluster 1
+            else:  # Closer to Mean 2
+                Cluster2.append(img[i, j])  # Add to Cluster 2
+    N1 = np.mean(Cluster1)  # Calculate mean for Cluster 1
+    N2 = np.mean(Cluster2)  # Calculate mean for Cluster 2
+    if (N1 == M1) and (N2 == M2):  # End when means become consistent
+        break
+    else:  # Update Means and Make Clusters empty again
+        M1 = N1
+        M2 = N2
+        Cluster1 = []
+        Cluster2 = []
+
+L1 = len(Cluster1)  # length of Cluster 1
+L2 = len(Cluster2)  # length of Cluster 2
+
+for k in range(0, L1):
+    output1[output1 == Cluster1[k]] = N1  # assign Mean 1 to Cluster 1 pixels
+for k in range(0, L2):
+    output1[output1 == Cluster2[k]] = N2  # assign Mean 2 to Cluster 2 pixels
+
+for k in range(0, L1):
+    output2[output2 == Cluster1[k]] = 0  # assign 0 to Cluster 1 pixels
+for k in range(0, L2):
+    output2[output2 == Cluster2[k]] = 255  # assign 255 to Cluster 1 pixels
+
+cv.imshow('Mean Thresholded Image', output1)
+cv.imshow('Final Binary Image', output2)
+cv.waitKey(0)
